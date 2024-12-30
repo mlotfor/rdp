@@ -1,7 +1,8 @@
 #!/bin/bash
 
 # Update and upgrade system
-sudo apt update -y && sudo apt upgrade -y
+sudo apt-mark hold google-cloud-sdk
+sudo apt update && sudo apt upgrade --ignore-hold
 
 # Install wget
 sudo apt install wget -y
