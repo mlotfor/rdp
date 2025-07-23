@@ -3,13 +3,14 @@
 # Exit immediately if a command exits with a non-zero status.
 set -e
 
-# Print commands and their arguments as they are executed.
-set -x
+# Define ANSI escape codes for colors
+BLUE='\033[0;34m'
+NC='\033[0m' # No Color
 
-echo "Starting Google Cloud CLI and Remote Desktop setup..."
+echo -e "${BLUE}Starting Google Cloud CLI and Remote Desktop setup...${NC}"
 
 # Hold Google Cloud CLI packages to avoid breaking updates
-echo "Holding Google Cloud CLI packages..."
+echo -e "${BLUE}Holding Google Cloud CLI packages...${NC}"
 sudo apt-mark hold \
   google-cloud-cli google-cloud-cli-anthoscli google-cloud-cli-app-engine-go \
   google-cloud-cli-app-engine-java google-cloud-cli-app-engine-python \
@@ -20,49 +21,59 @@ sudo apt-mark hold \
   google-cloud-cli-nomos google-cloud-cli-package-go-module google-cloud-cli-pubsub-emulator \
   google-cloud-cli-skaffold
 
-# Update and upgrade system, ignoring held packages
-echo "Updating and upgrading system packages..."
-sudo apt update && sudo apt upgrade --ignore-hold -y
+# Update and upgrade system, ignoring held packages and allowing changes to held packages
+echo -e "${BLUE}Updating and upgrading system packages...${NC}"
+sudo apt update && sudo apt upgrade --ignore-hold --allow-change-held-packages -y
 
 # Install required tools
-echo "Installing wget..."
+echo -e "${BLUE}Installing wget...${NC}"
 sudo apt install wget -y
 
-# Install Chrome Remote Desktop
-echo "Downloading Chrome Remote Desktop..."
+# --- Chrome Remote Desktop Clean-up and Installation ---
+echo -e "${BLUE}Stopping any running Chrome Remote Desktop service and removing old configurations...${NC}"
+# Stop the Chrome Remote Desktop service if it's running
+sudo systemctl stop chrome-remote-desktop || true # '|| true' prevents script from exiting if service isn't running
+# Remove old host ID and private key files to ensure a clean setup
+# These files are typically located in the user's config directory
+sudo rm -f "/home/$USER/.config/chrome-remote-desktop/host_id"
+sudo rm -f "/home/$USER/.config/chrome-remote-desktop/private_key"
+# Also remove the system-wide configuration if it exists, though less common for user issues
+sudo rm -f /etc/chrome-remote-desktop-host
+
+echo -e "${BLUE}Downloading Chrome Remote Desktop...${NC}"
 wget https://dl.google.com/linux/direct/chrome-remote-desktop_current_amd64.deb -O chrome-remote-desktop_current_amd64.deb
-echo "Installing Chrome Remote Desktop..."
+echo -e "${BLUE}Installing Chrome Remote Desktop...${NC}"
 sudo apt install ./chrome-remote-desktop_current_amd64.deb -y
 # Clean up the downloaded .deb file
 rm chrome-remote-desktop_current_amd64.deb
 
 # (Optional) Install Google Chrome Stable
-echo "Downloading Google Chrome Stable (optional)..."
+echo -e "${BLUE}Downloading Google Chrome Stable (optional)...${NC}"
 wget https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb -O google-chrome-stable_current_amd64.deb
-echo "Installing Google Chrome Stable (optional)..."
+echo -e "${BLUE}Installing Google Chrome Stable (optional)...${NC}"
 sudo apt install ./google-chrome-stable_current_amd64.deb -y
 # Clean up the downloaded .deb file
 rm google-chrome-stable_current_amd64.deb
 
 # Install XFCE desktop environment
-echo "Installing XFCE desktop environment..."
+echo -e "${BLUE}Installing XFCE desktop environment...${NC}"
 sudo DEBIAN_FRONTEND=noninteractive apt install --assume-yes xfce4 desktop-base dbus-x11 xscreensaver
 
 # Configure Chrome Remote Desktop session to use XFCE
-echo "Configuring Chrome Remote Desktop session for XFCE..."
+echo -e "${BLUE}Configuring Chrome Remote Desktop session for XFCE...${NC}"
 echo "exec /etc/X11/Xsession /usr/bin/xfce4-session" | sudo tee /etc/chrome-remote-desktop-session
 
 # Disable LightDM to avoid conflict with CRD
-echo "Disabling LightDM service to avoid conflicts..."
+echo -e "${BLUE}Disabling LightDM service to avoid conflicts...${NC}"
 sudo systemctl disable lightdm.service
 
 # Add Mozilla PPA and install Firefox ESR
-echo "Adding Mozilla PPA and installing Firefox ESR..."
+echo -e "${BLUE}Adding Mozilla PPA and installing Firefox ESR...${NC}"
 sudo add-apt-repository ppa:mozillateam/ppa -y
 sudo apt update -y # Update again after adding the PPA
 sudo apt install firefox-esr -y
 
-echo "Script completed successfully!"
+echo -e "${BLUE}Script completed successfully!${NC}"
 echo ""
 echo "======================================================================="
 echo "NEXT STEPS:"
