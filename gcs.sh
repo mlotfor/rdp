@@ -30,11 +30,7 @@ echo -e "${BLUE}Installing wget...${NC}"
 sudo apt install wget -y
 
 # --- Chrome Remote Desktop Clean-up and Reinstallation ---
-echo -e "${BLUE}Stopping and removing existing Chrome Remote Desktop installation and configurations...${NC}"
-# Stop the Chrome Remote Desktop service if it's running
-sudo systemctl stop chrome-remote-desktop || true
-# Give the service a moment to fully stop
-sleep 2
+echo -e "${BLUE}Removing existing Chrome Remote Desktop configurations...${NC}"
 # Remove old host ID and private key files to ensure a clean setup
 sudo rm -f "/home/$USER/.config/chrome-remote-desktop/host_id"
 sudo rm -f "/home/$USER/.config/chrome-remote-desktop/private_key"
@@ -66,9 +62,7 @@ sudo DEBIAN_FRONTEND=noninteractive apt install --assume-yes xfce4 desktop-base 
 echo -e "${BLUE}Configuring Chrome Remote Desktop session for XFCE...${NC}"
 echo "exec /etc/X11/Xsession /usr/bin/xfce4-session" | sudo tee /etc/chrome-remote-desktop-session
 
-# Disable LightDM to avoid conflict with CRD
-echo -e "${BLUE}Disabling LightDM service to avoid conflicts...${NC}"
-sudo systemctl disable lightdm.service
+# LightDM disable command removed as systemd is not present.
 
 # Add Mozilla PPA and install Firefox ESR
 echo -e "${BLUE}Adding Mozilla PPA and installing Firefox ESR...${NC}"
@@ -76,10 +70,7 @@ sudo add-apt-repository ppa:mozillateam/ppa -y
 sudo apt update -y # Update again after adding the PPA
 sudo apt install firefox-esr -y
 
-# Start Chrome Remote Desktop service explicitly
-echo -e "${BLUE}Starting Chrome Remote Desktop service...${NC}"
-sudo systemctl enable chrome-remote-desktop
-sudo systemctl start chrome-remote-desktop
+# Chrome Remote Desktop service start commands removed as systemd is not present.
 
 echo -e "${BLUE}Script completed successfully!${NC}"
 echo ""
