@@ -21,24 +21,27 @@ sudo apt-mark hold \
   google-cloud-cli-nomos google-cloud-cli-package-go-module google-cloud-cli-pubsub-emulator \
   google-cloud-cli-skaffold
 
-# Update and upgrade system, ignoring held packages and allowing changes to held packages
-echo -e "${BLUE}Updating and upgrading system packages...${NC}"
-sudo apt update && sudo apt upgrade --ignore-hold --allow-change-held-packages -y
+# Update system package lists (no full upgrade to save time)
+echo -e "${BLUE}Updating system package lists...${NC}"
+sudo apt update -y
 
 # Install required tools
 echo -e "${BLUE}Installing wget...${NC}"
 sudo apt install wget -y
 
-# --- Chrome Remote Desktop Clean-up and Installation ---
-echo -e "${BLUE}Stopping any running Chrome Remote Desktop service and removing old configurations...${NC}"
+# --- Chrome Remote Desktop Clean-up and Reinstallation ---
+echo -e "${BLUE}Stopping and removing existing Chrome Remote Desktop installation and configurations...${NC}"
 # Stop the Chrome Remote Desktop service if it's running
-sudo systemctl stop chrome-remote-desktop || true # '|| true' prevents script from exiting if service isn't running
+sudo systemctl stop chrome-remote-desktop || true
+# Give the service a moment to fully stop
+sleep 2
 # Remove old host ID and private key files to ensure a clean setup
-# These files are typically located in the user's config directory
 sudo rm -f "/home/$USER/.config/chrome-remote-desktop/host_id"
 sudo rm -f "/home/$USER/.config/chrome-remote-desktop/private_key"
-# Also remove the system-wide configuration if it exists, though less common for user issues
+# Remove the system-wide configuration if it exists
 sudo rm -f /etc/chrome-remote-desktop-host
+# Purge the existing chrome-remote-desktop package to remove all associated files
+sudo apt purge chrome-remote-desktop -y || true # '|| true' to prevent script exit if not installed
 
 echo -e "${BLUE}Downloading Chrome Remote Desktop...${NC}"
 wget https://dl.google.com/linux/direct/chrome-remote-desktop_current_amd64.deb -O chrome-remote-desktop_current_amd64.deb
@@ -73,9 +76,20 @@ sudo add-apt-repository ppa:mozillateam/ppa -y
 sudo apt update -y # Update again after adding the PPA
 sudo apt install firefox-esr -y
 
+# Start Chrome Remote Desktop service explicitly
+echo -e "${BLUE}Starting Chrome Remote Desktop service...${NC}"
+sudo systemctl enable chrome-remote-desktop
+sudo systemctl start chrome-remote-desktop
+
 echo -e "${BLUE}Script completed successfully!${NC}"
 echo ""
 echo "======================================================================="
+echo "IMPORTANT NOTE:"
+echo "This script has been optimized for speed by skipping a full system"
+echo "upgrade. Your existing packages will not be updated to their latest"
+echo "versions. If you wish to perform a full system upgrade later, you can"
+echo "run 'sudo apt update && sudo apt upgrade' manually."
+echo ""
 echo "NEXT STEPS:"
 echo "To enable Chrome Remote Desktop, you need to authorize it with your"
 echo "Google account. Follow the instructions provided by Google, which"
